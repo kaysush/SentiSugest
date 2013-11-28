@@ -1,5 +1,5 @@
 /**
- * This is a Quartz Job which fetched the tweets of the user.
+ * This is a Quartz Job to fetch the tweets of the user periodically.
  */
 package com.kaysush.sentisuggest.twitter;
 
@@ -30,11 +30,15 @@ public class FetchJob implements Job {
             JobDataMap map = jec.getJobDetail().getJobDataMap();
             String username = map.getString("username");
             String tweet = FetchTweets.fetch(accessToken, username).get(0).getText();
-            AlchemyResponse response = Alchemy.getInstance().analyze(tweet);
-            String sentiment = response.getDocSentiment().getType();
-            SharedVariables.setCurrentTweet(tweet);
-            SharedVariables.setCurrentSentiment(sentiment);
-            System.out.println(tweet + " => " + sentiment);
+
+            if (!tweet.equals(SharedVariables.getCurrentTweet())) {
+                AlchemyResponse response = Alchemy.getInstance().analyze(tweet);
+                String sentiment = response.getDocSentiment().getType();
+                SharedVariables.setCurrentTweet(tweet);
+                SharedVariables.setCurrentSentiment(sentiment);
+            }
+
+            System.out.println(SharedVariables.getCurrentTweet() + " => " + SharedVariables.getCurrentSentiment());
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(FetchJob.class.getName()).log(Level.SEVERE, null, ex);
         } catch (AuthenticationException ex) {
